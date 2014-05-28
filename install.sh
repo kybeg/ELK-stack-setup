@@ -2,8 +2,8 @@
 
 # versions
 LOGSTASH_VER="1.4.1"
-ES_VER="1.1.0"
-KIBANA_VER="3.0.1"
+ES_VER="1.4.0"
+KIBANA_VER="3.1.0"
 
 ES_CLUSTER="ES-CLUSTER"
 INSTALL_DIR="/elk"
@@ -30,7 +30,7 @@ service elasticsearch restart
 # Kibana
 wget https://download.elasticsearch.org/kibana/kibana/kibana-$KIBANA_VER.tar.gz
 tar xzf kibana-$KIBANA_VER.tar.gz
-cp -R $KIBANA_VER/* /var/www
+cp -R kibana-$KIBANA_VER/* /var/www
 nano /var/www/config.js
 
 
@@ -72,6 +72,6 @@ grok {
 output {
 stdout { }
   elasticsearch {
-    cluster => "elastickyrre"
+    cluster => "elasticsearch"
   }
 }' > /etc/logstash/server.conf
