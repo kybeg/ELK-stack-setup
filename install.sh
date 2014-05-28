@@ -2,7 +2,7 @@
 
 # versions
 LOGSTASH_VER="1.4.1"
-ES_VER="1.4.0"
+ES_VER="1.2.0"
 KIBANA_VER="3.1.0"
 
 ES_CLUSTER="ES-CLUSTER"
