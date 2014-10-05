@@ -83,7 +83,8 @@ script
   export PATH HOME JAVA_OPTS LS_HEAP_SIZE LS_JAVA_OPTS LS_USE_GC_LOGGING
   test -n \"\${JAVACMD}\" && export JAVACMD
 
-  exec nice -n \${LS_NICE} $INSTALL_DIR/logstash-$LOGSTASH_VER/bin/logstash agent -f \"\${LS_CONF_DIR}\" end script
+  exec nice -n \${LS_NICE} $INSTALL_DIR/logstash-$LOGSTASH_VER/bin/logstash agent -f \"\${LS_CONF_DIR}\" 
+end script
 "
 
 
