@@ -43,7 +43,48 @@ stdout { }
   }
 }'
 
+$LOGSTASH_INIT = "
+# logstash - agent instance
+#
 
+description     'logstash agent'
+
+start on virtual-filesystems
+stop on runlevel [06]
+
+# Respawn it if the process exits
+respawn
+ 
+## We're setting high here, we'll re-limit below.
+#limit nofile 65550 65550
+
+setuid root
+setgid root
+
+# You need to chdir somewhere writable because logstash needs to unpack a few
+# temporary files on startup.
+console log
+script
+  # Defaults
+  LS_HOME=$INSTALL_DIR/logstash-$LOGSTASH_VER
+  LS_CONF_DIR=/etc/logstash/logstash.conf
+  LS_OPEN_FILES=16384
+  LS_NICE=19
+  LS_OPTS=\"\"
+
+  # Override our defaults with user defaults:
+  [ -f /etc/default/logstash ] && . /etc/default/logstash
+
+  # Reset filehandle limit
+  ulimit -n \${LS_OPEN_FILES}
+  cd \"\${LS_HOME}\"
+
+  # Export variables
+  export PATH HOME JAVA_OPTS LS_HEAP_SIZE LS_JAVA_OPTS LS_USE_GC_LOGGING
+  test -n \"\${JAVACMD}\" && export JAVACMD
+
+  exec nice -n \${LS_NICE} $INSTALL_DIR/logstash-$LOGSTASH_VER/bin/logstash agent -f \"\${LS_CONF_DIR}\" end script
+"
 
 
 file { "elk-dir":
@@ -76,9 +117,15 @@ package { "apache2" :
 
 exec { "download-logstash" :
     path => "/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/bin",
-    command => "curl https://download.elasticsearch.org/logstash/logstash/logstash-$LOGSTASH_VER.tar.gz | tar xz -C $DOWNLOAD_DIR",
-    unless => "ls $DOWNLOAD_DIR/logstash-$LOGSTASH_VER",
+    command => "curl https://download.elasticsearch.org/logstash/logstash/logstash-$LOGSTASH_VER.tar.gz | tar xz -C $INSTALL_DIR",
+    unless => "ls $INSTALL_DIR/logstash-$LOGSTASH_VER",
 }
+
+file { "/etc/init/logstash.conf" :
+   ensure => present,
+   content => $LOGSTASH_INIT,
+   require => Exec['download-logstash'],
+   }
 
 # ELASTICSEARCH
 
