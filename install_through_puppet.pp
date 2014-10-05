@@ -125,6 +125,12 @@ file { "/etc/init/logstash.conf" :
    ensure => present,
    content => $LOGSTASH_INIT,
    require => Exec['download-logstash'],
+   notify => Service['logstash'],
+   }
+
+service { 'logstash' :
+   ensure => running,
+   require => File['/etc/init/logstash.conf'],
    }
 
 # ELASTICSEARCH
