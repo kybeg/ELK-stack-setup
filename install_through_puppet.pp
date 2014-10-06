@@ -146,7 +146,7 @@ exec { "install-elasticsearch" :
     path => "/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/bin",
     command => "dpkg -i $DOWNLOAD_DIR/elasticsearch-$ES_VER.deb",
     unless => "dpkg -l elasticsearch",
-    require => [Exec['download-elasticsearc'], Package['openjdk-7-jre']],
+    require => [Exec['download-elasticsearch'], Package['openjdk-7-jre']],
 }
 
 service { "elasticsearch" :
