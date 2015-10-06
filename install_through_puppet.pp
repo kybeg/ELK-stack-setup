@@ -13,22 +13,22 @@ $INSTALL_DIR = "/elk"
 
 $DOWNLOAD_DIR = "/tmp"
 
-$LOGSTASH_CONTENT = '
+$LOGSTASH_CONTENT = "
 input {
   redis {
-    host => "127.0.0.1"
-    type => "redis"
-    data_type => "list"
-    key => "logstash"
+    host => '127.0.0.1'
+    type => 'redis'
+    data_type => 'list'
+    key => 'logstash'
   }
   syslog {
-    tags => [ "syslogmessage" ]
+    tags => [ 'syslogmessage' ]
     type => syslog
   }
   tcp {
     port => 8888
     type => listentcp
-    tags => [ "tcpmessage" ]
+    tags => [ 'tcpmessage' ]
   }
 }
 
@@ -36,9 +36,9 @@ input {
 output {
 stdout { }
   elasticsearch {
-    cluster => "$ES_CLUSTER"
+    cluster => '$ES_CLUSTER'
   }
-}'
+}"
 
 $LOGSTASH_INIT = "
 # logstash - agent instance
