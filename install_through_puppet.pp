@@ -143,6 +143,7 @@ exec { "download-logstash" :
     path => "/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/bin",
     command => "curl https://download.elastic.co/logstash/logstash/logstash-$LOGSTASH_VER.tar.gz | tar xz -C $INSTALL_DIR",
     unless => "ls $INSTALL_DIR/logstash-$LOGSTASH_VER",
+    require => File['elk-dir'],
 }
 
 file { "/etc/init/logstash.conf" :
