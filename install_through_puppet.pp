@@ -32,18 +32,11 @@ input {
   }
 }
 
-filter {
-grok {
-    type => listentcp
-    match => [ "message" , "put %{DATA:metric} %{NUMBER:value}" ]
-}
-
-}
 
 output {
 stdout { }
   elasticsearch {
-    cluster => "elasticsearch"
+    cluster => "$ES_CLUSTER"
   }
 }'
 
@@ -177,9 +170,23 @@ exec { "install-elasticsearch" :
     require => [Exec['download-elasticsearch'], Package['openjdk-7-jre']],
 }
 
+exec { "uncomment-cluster-name" :
+    path => "/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/bin",
+    command => "echo cluster.name: elasticsearch >> /etc/elasticsearch/elasticsearch.yml",
+    unless => "egrep '^cluster.name:' /etc/elasticsearch/elasticsearch.yml",
+    require => Exec['install-elasticsearch'],
+}
+
+exec { "set-cluster-name" :
+    path => "/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/bin",
+    command => "sed -i.bak 's/cluster.name: .*/cluster.name: $ES_CLUSTER/g' /etc/elasticsearch/elasticsearch.yml",
+    unless => "egrep '^cluster.name: $ES_CLUSTER' /etc/elasticsearch/elasticsearch.yml",
+    require => Exec['uncomment-cluster-name'],
+}
+
 service { "elasticsearch" :
     ensure => running,
-    require => Exec['install-elasticsearch'],
+    require => Exec['set-cluster-name'],
     }
 
 # KIBANA
