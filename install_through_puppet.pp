@@ -1,8 +1,8 @@
 
 
-$LOGSTASH_VER = "1.4.2"
-$ES_VER = "1.3.4"
-$KIBANA_VER = "3.1.1"
+$LOGSTASH_VER = "1.5.4"
+$ES_VER = "1.7.2"
+$KIBANA_VER = "4.1.2"
 
 $ES_CLUSTER = "ES-CLUSTER"
 $INSTALL_DIR = "/elk"
@@ -87,6 +87,33 @@ script
 end script
 "
 
+$KIBANA_INIT = "
+# kibana init file
+#
+
+description     'kibana service'
+
+start on virtual-filesystems
+stop on runlevel [06]
+
+# Respawn it if the process exits
+respawn
+ 
+## We're setting high here, we'll re-limit below.
+#limit nofile 65550 65550
+
+setuid root
+setgid root
+
+# You need to chdir somewhere writable because logstash needs to unpack a few
+# temporary files on startup.
+console log
+script
+
+  exec $INSTALL_DIR/kibana-$KIBANA_VER/bin/kibana
+end script
+"
+
 
 file { "elk-dir":
     name => $INSTALL_DIR,
@@ -108,17 +135,13 @@ package { "redis-server" :
   require => File["elk-dir"],
 }
 
-package { "apache2" :
-  ensure => present,
-  require => File["elk-dir"],
-}
 
 # 
 # LOGSTASH
 
 exec { "download-logstash" :
     path => "/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/bin",
-    command => "curl https://download.elasticsearch.org/logstash/logstash/logstash-$LOGSTASH_VER.tar.gz | tar xz -C $INSTALL_DIR",
+    command => "curl https://download.elastic.co/logstash/logstash/logstash-$LOGSTASH_VER.tar.gz | tar xz -C $INSTALL_DIR",
     unless => "ls $INSTALL_DIR/logstash-$LOGSTASH_VER",
 }
 
@@ -138,7 +161,7 @@ service { 'logstash' :
 
 exec { "download-elasticsearch" :
     path => "/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/bin",
-    command => "wget -O $DOWNLOAD_DIR/elasticsearch-$ES_VER.deb https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-$ES_VER.deb",
+    command => "wget -O $DOWNLOAD_DIR/elasticsearch-$ES_VER.deb https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-$ES_VER.deb",
     unless => "ls $DOWNLOAD_DIR/elasticsearch-$ES_VER.deb",
 }
 
@@ -156,21 +179,31 @@ service { "elasticsearch" :
 
 # KIBANA
 
+file { "kibana-dir" :
+   name => "$INSTALL_DIR/kibana-$KIBANA_VER",
+   ensure => directory,
+   require => File['elk-dir'],
+   }
+
 exec { "download-kibana" :
     path => "/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/bin",
-    command => "curl https://download.elasticsearch.org/kibana/kibana/kibana-$KIBANA_VER.tar.gz | tar xz --strip-components 1 -C /var/www",
-    unless => "ls /var/www/config.js",
-    require => Package['apache2'],
+    command => "curl https://download.elastic.co/kibana/kibana/kibana-$KIBANA_VER-linux-x64.tar.gz | tar xz --strip-components 1 -C $INSTALL_DIR/kibana-$KIBANA_VER",
+    unless => "ls $INSTALL_DIR/kibana-$KIBANA_VER/bin/kibana",
+    require => File['kibana-dir'],
 }
 
-# not really needed
-# exec { "configure-kibana" :
-#    path => "/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/bin",
-#     command => "sed -i 's/\s+elasticsearch:.*window\.location\.hostname.*/elasticsearch: http://localhost:9200,/' /var/www/config.js"
-# }
-# tar xzf kibana-$KIBANA_VER.tar.gz
-# cp -R kibana-$KIBANA_VER/* /var/www
-# nano /var/www/config.js
+file { "/etc/init/kibana.conf" :
+   ensure => present,
+   content => $KIBANA_INIT,
+   require => Exec['download-kibana'],
+   notify => Service['kibana'],
+   }
+
+service { "kibana" :
+    ensure => running,
+    require => File['/etc/init/kibana.conf'],
+ }
+
 
 service { "redis-server" :
   ensure => running,
