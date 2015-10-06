@@ -1,10 +1,14 @@
+# MAKE SURE YOU SET A UNIQUE NAME FOR THE ELASTICSEARCH CLUSTER:
+$ES_CLUSTER = ""
 
+if $ES_CLUSTER==undef {
+fail("You need to define a unique name to the ES_CLUSTER variable")
+}
 
 $LOGSTASH_VER = "1.5.4"
 $ES_VER = "1.7.2"
 $KIBANA_VER = "4.1.2"
 
-$ES_CLUSTER = "ES-CLUSTER"
 $INSTALL_DIR = "/elk"
 
 $DOWNLOAD_DIR = "/tmp"
