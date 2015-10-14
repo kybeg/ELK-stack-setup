@@ -16,7 +16,7 @@ $DOWNLOAD_DIR = "/tmp"
 $LOGSTASH_CONTENT = "
 input {
   redis {
-    host => '127.0.0.1'
+    host => \"127.0.0.1\"
     type => 'redis'
     data_type => 'list'
     key => 'logstash'
@@ -36,7 +36,7 @@ input {
 output {
 stdout { }
   elasticsearch {
-    cluster => '$ES_CLUSTER'
+    cluster => \"$ES_CLUSTER\"
   }
 }"
 
